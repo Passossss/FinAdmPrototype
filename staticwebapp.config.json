@@ -15,7 +15,12 @@
     "rewrite": "/index.html"
   },
   "mimeTypes": {
+    ".js": "application/javascript",
+    ".mjs": "application/javascript",
     ".json": "application/json",
-    ".wasm": "application/wasm"
+    ".wasm": "application/wasm",
+    ".css": "text/css",
+    ".png": "image/png",
+    ".svg": "image/svg+xml"
   }
 }
