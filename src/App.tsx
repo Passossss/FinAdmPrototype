@@ -57,7 +57,7 @@ function AppContent() {
     const handleGoToFinApp = () => {
       console.log('[App] Redirecionando para FinApp');
       // Redirecionar para o FinApp (usuário comum) na porta 5173
-      window.location.href = '/';
+      window.location.href = 'http://localhost:5173';
     };
 
     const handleLogin = async () => {
