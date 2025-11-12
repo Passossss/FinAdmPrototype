@@ -2,23 +2,31 @@
   "routes": [
     {
       "route": "/assets/*",
-      "serve": "/assets/*",
-      "statusCode": 200
+      "serve": "/assets/*"
     },
     {
-      "route": "/*.js",
-      "serve": "/*.js",
-      "statusCode": 200
+      "route": "*.json",
+      "serve": "*.json"
     },
     {
-      "route": "/*.css",
-      "serve": "/*.css",
-      "statusCode": 200
+      "route": "*.js",
+      "serve": "*.js"
+    },
+    {
+      "route": "*.css",
+      "serve": "*.css"
     },
     {
       "route": "*.png",
-      "serve": "*.png",
-      "statusCode": 200
+      "serve": "*.png"
+    },
+    {
+      "route": "*.svg",
+      "serve": "*.svg"
+    },
+    {
+      "route": "*.ico",
+      "serve": "*.ico"
     },
     {
       "route": "/*",
@@ -26,9 +34,6 @@
       "statusCode": 200
     }
   ],
-  "navigationFallback": {
-    "rewrite": "/index.html"
-  },
   "mimeTypes": {
     ".js": "application/javascript",
     ".mjs": "application/javascript",
@@ -36,6 +41,7 @@
     ".wasm": "application/wasm",
     ".css": "text/css",
     ".png": "image/png",
-    ".svg": "image/svg+xml"
+    ".svg": "image/svg+xml",
+    ".ico": "image/x-icon"
   }
 }
