@@ -57,7 +57,7 @@ function AppContent() {
     const handleGoToFinApp = () => {
       console.log('[App] Redirecionando para FinApp');
       // Redirecionar para o FinApp (usuário comum) na porta 5173
-      window.location.href = 'http://localhost:5173';
+      window.location.href = 'https://red-beach-0f53cba10.1.azurestaticapps.net/';
     };
 
     const handleLogin = async () => {
