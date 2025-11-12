@@ -7,7 +7,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Sun, Moon, Bell, Search, Settings, LogIn, UserPlus, KeyRound, LogOut, Shield, Menu } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import finLogo from 'figma:asset/ab96a01ccc3918ccf1ac13bd8ea1ce61846a04bc.png';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -46,8 +45,8 @@ export function Header({ onToggleSidebar, isSidebarCollapsed, onPageChange }: He
           </Button>
           
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white p-1 shadow-sm border border-primary/20">
-              <img src={finLogo} alt="Fin" className="w-full h-full object-contain" />
+            <div className="w-10 h-10 rounded-lg overflow-hidden bg-white p-1 shadow-sm border border-primary/20 flex items-center justify-center">
+              <span className="text-sm font-bold text-primary">F</span>
             </div>
             <div className="flex flex-col">
               <span className="font-semibold text-xl text-foreground">Fin</span>
