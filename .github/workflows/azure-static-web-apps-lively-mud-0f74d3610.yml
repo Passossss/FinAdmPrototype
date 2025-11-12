@@ -31,8 +31,8 @@ jobs:
           app_location: "/" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
-          # Ensure all dependencies (including optional) are installed and run Vite via Node to avoid permission issues
-          app_build_command: "npm install && node ./node_modules/vite/bin/vite.js build"
+          # Remove lock file to force fresh install of all dependencies (including optional rollup binaries) and run Vite via Node
+          app_build_command: "rm -f package-lock.json && npm install && node ./node_modules/vite/bin/vite.js build"
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
