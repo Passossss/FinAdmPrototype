@@ -13,7 +13,7 @@ export default defineConfig({
   build: {
     target: 'esnext',
     outDir: 'dist',
-    minify: 'terser',
+    minify: 'esbuild',
   },
   server: {
     port: 5174,

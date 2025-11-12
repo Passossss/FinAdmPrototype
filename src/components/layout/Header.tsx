@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Sun, Moon, Bell, Search, Settings, LogIn, UserPlus, KeyRound, LogOut, Shield, Menu } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import finLogo from 'figma:asset/ab96a01ccc3918ccf1ac13bd8ea1ce61846a04bc.png';
+import finLogo from '../../assets/ab96a01ccc3918ccf1ac13bd8ea1ce61846a04bc.png';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
