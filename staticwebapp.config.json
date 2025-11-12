@@ -6,6 +6,21 @@
       "statusCode": 200
     },
     {
+      "route": "/*.js",
+      "serve": "/*.js",
+      "statusCode": 200
+    },
+    {
+      "route": "/*.css",
+      "serve": "/*.css",
+      "statusCode": 200
+    },
+    {
+      "route": "*.png",
+      "serve": "*.png",
+      "statusCode": 200
+    },
+    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
