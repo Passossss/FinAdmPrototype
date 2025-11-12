@@ -31,8 +31,8 @@ jobs:
           app_location: "/" # App source code path
           api_location: "" # Api source code path - optional
           output_location: "build" # Built app content directory - optional
-          # Ensure devDependencies are installed and run Vite via Node to avoid permission issues
-          app_build_command: "npm ci --include=dev && node ./node_modules/vite/bin/vite.js build"
+          # Ensure all dependencies (including optional) are installed and run Vite via Node to avoid permission issues
+          app_build_command: "npm install && node ./node_modules/vite/bin/vite.js build"
           ###### End of Repository/Build Configurations ######
 
   close_pull_request_job:
