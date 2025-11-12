@@ -1,42 +1,60 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, PiggyBank, ArrowUpRight, ArrowDownRight, Plus, Shield, Settings } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, CreditCard, Target, PiggyBank, ArrowUpRight, ArrowDownRight, Plus, Shield, Settings, Loader2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useAuth } from '../contexts/AuthContext';
+import { useTransactions } from '../../hooks/useTransactions';
 
-const balanceData = [
-  { month: 'Jan', receitas: 4500, despesas: 3200 },
-  { month: 'Fev', receitas: 5200, despesas: 3800 },
-  { month: 'Mar', receitas: 4800, despesas: 3400 },
-  { month: 'Abr', receitas: 5500, despesas: 4100 },
-  { month: 'Mai', receitas: 6200, despesas: 4500 },
-  { month: 'Jun', receitas: 5800, despesas: 4200 },
-];
+interface FinDashboardProps {
+  onPageChange?: (page: string) => void;
+}
 
-const categoryData = [
-  { name: 'Alimentação', value: 1200, color: '#f87b07' },
-  { name: 'Transporte', value: 800, color: '#fdc570' },
-  { name: 'Lazer', value: 450, color: '#10b981' },
-  { name: 'Saúde', value: 300, color: '#3b82f6' },
-  { name: 'Outros', value: 250, color: '#8b5cf6' },
-];
-
-const recentTransactions = [
-  { id: 1, description: 'Supermercado Extra', amount: -185.50, category: 'Alimentação', date: '2024-12-09', type: 'expense' },
-  { id: 2, description: 'Salário', amount: 4500.00, category: 'Salário', date: '2024-12-05', type: 'income' },
-  { id: 3, description: 'Uber', amount: -32.00, category: 'Transporte', date: '2024-12-08', type: 'expense' },
-  { id: 4, description: 'Netflix', amount: -45.90, category: 'Lazer', date: '2024-12-07', type: 'expense' },
-  { id: 5, description: 'Freelance', amount: 800.00, category: 'Trabalho', date: '2024-12-06', type: 'income' },
-];
-
-export function FinDashboard() {
-  const { isAdmin } = useAuth();
-  const totalReceitas = balanceData[balanceData.length - 1]?.receitas || 0;
-  const totalDespesas = balanceData[balanceData.length - 1]?.despesas || 0;
+export function FinDashboard({ onPageChange }: FinDashboardProps) {
+  const { isAdmin, user } = useAuth();
+  const { transactions, loading, stats } = useTransactions();
+  
+  const totalReceitas = stats?.income || 0;
+  const totalDespesas = Math.abs(stats?.expenses || 0);
   const saldoAtual = totalReceitas - totalDespesas;
-  const crescimentoReceitas = '+12.5%';
-  const crescimentoDespesas = '+8.2%';
+  const crescimentoReceitas = '+0%';
+  const crescimentoDespesas = '+0%';
+  
+  // Pegar últimas 5 transações recentes
+  const recentTransactions = transactions
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map(t => ({
+      id: t.id,
+      description: t.description || 'Sem descrição',
+      amount: t.type === 'income' ? t.amount : -Math.abs(t.amount),
+      category: 'Categoria',
+      date: new Date(t.date).toISOString().split('T')[0],
+      type: t.type,
+    }));
+
+  // Dados simplificados para gráficos (podem ser melhorados com dados históricos)
+  const balanceData = [
+    { month: 'Jan', receitas: 0, despesas: 0 },
+    { month: 'Fev', receitas: 0, despesas: 0 },
+    { month: 'Mar', receitas: 0, despesas: 0 },
+    { month: 'Abr', receitas: 0, despesas: 0 },
+    { month: 'Mai', receitas: totalReceitas, despesas: totalDespesas },
+    { month: 'Jun', receitas: totalReceitas, despesas: totalDespesas },
+  ];
+
+  const categoryData = [
+    { name: 'Geral', value: totalDespesas, color: '#f87b07' },
+  ];
+
+  if (loading && transactions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -44,7 +62,7 @@ export function FinDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h1>Olá, Gustavo! 👋</h1>
+            <h1>Olá, {user?.name || 'Usuário'}! 👋</h1>
             {isAdmin && (
               <Badge className="bg-gradient-to-r from-primary to-accent text-white shadow-sm">
                 <Shield className="w-3 h-3 mr-1" />
@@ -60,13 +78,10 @@ export function FinDashboard() {
           </p>
         </div>
         <div className="flex gap-2">
-          {isAdmin && (
-            <Button variant="outline" className="border-primary/20 text-primary hover:bg-primary/10">
-              <Settings className="w-4 h-4 mr-2" />
-              Gerenciar Sistema
-            </Button>
-          )}
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button 
+            className="bg-primary hover:bg-primary/90"
+            onClick={() => onPageChange?.('transactions')}
+          >
             <Plus className="w-4 h-4 mr-2" />
             Nova Transação
           </Button>
@@ -84,8 +99,8 @@ export function FinDashboard() {
                   R$ {saldoAtual.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
                 <div className="flex items-center mt-1">
-                  <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-500">+5.2% vs mês anterior</span>
+                  <TrendingUp className="w-4 h-4 text-green-500 dark:text-green-400 mr-1" />
+                  <span className="text-sm text-green-500 dark:text-green-400">+5.2% vs mês anterior</span>
                 </div>
               </div>
               <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
@@ -100,16 +115,16 @@ export function FinDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Receitas</p>
-                <p className="text-2xl font-semibold text-green-600">
+                <p className="text-2xl font-semibold text-green-600 dark:text-green-400">
                   R$ {totalReceitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
                 <div className="flex items-center mt-1">
-                  <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-500">{crescimentoReceitas}</span>
+                  <ArrowUpRight className="w-4 h-4 text-green-500 dark:text-green-400 mr-1" />
+                  <span className="text-sm text-green-500 dark:text-green-400">{crescimentoReceitas}</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
               </div>
             </div>
           </CardContent>
@@ -120,16 +135,16 @@ export function FinDashboard() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Despesas</p>
-                <p className="text-2xl font-semibold text-red-600">
+                <p className="text-2xl font-semibold text-red-600 dark:text-red-400">
                   R$ {totalDespesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </p>
                 <div className="flex items-center mt-1">
-                  <ArrowDownRight className="w-4 h-4 text-red-500 mr-1" />
-                  <span className="text-sm text-red-500">{crescimentoDespesas}</span>
+                  <ArrowDownRight className="w-4 h-4 text-red-500 dark:text-red-400 mr-1" />
+                  <span className="text-sm text-red-500 dark:text-red-400">{crescimentoDespesas}</span>
                 </div>
               </div>
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                <TrendingDown className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center">
+                <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
             </div>
           </CardContent>
@@ -233,7 +248,13 @@ export function FinDashboard() {
               <CardTitle>Transações Recentes</CardTitle>
               <p className="text-sm text-muted-foreground">Últimas 5 movimentações</p>
             </div>
-            <Button variant="outline" size="sm">Ver Todas</Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onPageChange?.('transactions')}
+            >
+              Ver Todas
+            </Button>
           </div>
         </CardHeader>
         <CardContent>
@@ -242,12 +263,12 @@ export function FinDashboard() {
               <div key={transaction.id} className="flex items-center justify-between p-3 border border-border rounded-lg hover:bg-muted/50 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    transaction.type === 'income' ? 'bg-green-100' : 'bg-red-100'
+                    transaction.type === 'income' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'
                   }`}>
                     {transaction.type === 'income' ? (
-                      <ArrowUpRight className={`w-5 h-5 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
+                      <ArrowUpRight className={`w-5 h-5 ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
                     ) : (
-                      <ArrowDownRight className={`w-5 h-5 ${transaction.type === 'income' ? 'text-green-600' : 'text-red-600'}`} />
+                      <ArrowDownRight className={`w-5 h-5 ${transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`} />
                     )}
                   </div>
                   <div>
@@ -260,7 +281,7 @@ export function FinDashboard() {
                 </div>
                 <div className="text-right">
                   <p className={`font-semibold ${
-                    transaction.type === 'income' ? 'text-green-600' : 'text-red-600'
+                    transaction.type === 'income' ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                   }`}>
                     {transaction.type === 'income' ? '+' : ''}R$ {Math.abs(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                   </p>
@@ -273,7 +294,10 @@ export function FinDashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-primary/20">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow border-primary/20"
+          onClick={() => onPageChange?.('transactions')}
+        >
           <CardContent className="p-6 text-center">
             <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-3">
               <Plus className="w-6 h-6 text-primary" />
@@ -283,10 +307,13 @@ export function FinDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="cursor-pointer hover:shadow-md transition-shadow border-red-200">
+        <Card 
+          className="cursor-pointer hover:shadow-md transition-shadow border-red-200"
+          onClick={() => onPageChange?.('transactions')}
+        >
           <CardContent className="p-6 text-center">
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <ArrowDownRight className="w-6 h-6 text-red-600" />
+            <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
+              <ArrowDownRight className="w-6 h-6 text-red-600 dark:text-red-400" />
             </div>
             <h3 className="font-medium">Nova Despesa</h3>
             <p className="text-sm text-muted-foreground">Registrar um gasto</p>

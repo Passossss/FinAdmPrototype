@@ -1,21 +1,16 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  phone?: string;
-  avatar?: string;
-  role: 'normal' | 'admin';
-}
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { authService } from '../../services/authService';
+import { STORAGE_KEYS } from '../../services/config';
+import type { User } from '../../services/types';
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
-  logout: () => void;
-  updateUser: (updates: Partial<User>) => void;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,27 +20,78 @@ interface AuthProviderProps {
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
-  // Mock user for demonstration - replace with actual auth logic
-  const [user, setUser] = useState<User | null>({
-    id: '1',
-    name: 'Gustavo Passos',
-    email: 'gustavo@exemplo.com',
-    phone: '(11) 99999-9999',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-    role: 'admin'
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (userData: User) => {
-    setUser(userData);
+  // Carregar usuário do localStorage na inicialização
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const storedUser = authService.getCurrentUser();
+        const hasToken = authService.isAuthenticated();
+        
+        if (storedUser && hasToken) {
+          console.log('[AuthContext] Usuário encontrado no localStorage:', storedUser.email);
+          setUser(storedUser);
+          
+          // Tentar atualizar os dados do servidor (apenas se tiver token válido)
+          try {
+            const freshUser = await authService.getCurrentUserProfile();
+            console.log('[AuthContext] Perfil atualizado do servidor');
+            setUser(freshUser);
+          } catch (error) {
+            console.warn('[AuthContext] Não foi possível atualizar perfil do servidor, usando localStorage');
+            // Se falhar ao buscar do servidor, manter usuário do localStorage
+            // Isso evita deslogar usuários desnecessariamente quando o backend está offline
+          }
+        } else {
+          console.log('[AuthContext] Nenhum usuário autenticado encontrado');
+          setUser(null);
+        }
+      } catch (error) {
+        console.error('[AuthContext] Erro ao carregar usuário:', error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadUser();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    try {
+      console.log('[AuthContext] Iniciando login para:', email);
+      const response = await authService.login({ email, password });
+      console.log('[AuthContext] Login bem-sucedido. Role:', response.user.role);
+      setUser(response.user);
+    } catch (error) {
+      console.error('[AuthContext] Erro ao fazer login:', error);
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
+  const logout = async () => {
+    try {
+      console.log('[AuthContext] Iniciando logout');
+      await authService.logout();
+      console.log('[AuthContext] Logout concluído');
+    } catch (error) {
+      console.error('[AuthContext] Erro ao fazer logout:', error);
+    } finally {
+      setUser(null);
+    }
   };
 
-  const updateUser = (updates: Partial<User>) => {
-    if (user) {
-      setUser({ ...user, ...updates });
+  const updateUser = async (updates: Partial<User>) => {
+    if (!user) return;
+    
+    try {
+      const updatedUser = await authService.updateProfile(user.id, updates);
+      setUser(updatedUser);
+    } catch (error) {
+      console.error('Erro ao atualizar usuário:', error);
+      throw error;
     }
   };
 
@@ -54,8 +100,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     logout,
     updateUser,
-    isAuthenticated: !!user,
-    isAdmin: user?.role === 'admin'
+    isAuthenticated: !!user && authService.isAuthenticated(),
+    isAdmin: user?.role === 'admin',
+    loading
   };
 
   return (
