@@ -1,6 +1,11 @@
 {
   "routes": [
     {
+      "route": "/assets/*",
+      "serve": "/assets/*",
+      "statusCode": 200
+    },
+    {
       "route": "/*",
       "serve": "/index.html",
       "statusCode": 200
